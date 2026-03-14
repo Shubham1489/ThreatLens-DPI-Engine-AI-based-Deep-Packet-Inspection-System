@@ -1,3 +1,23 @@
+<p align="center">
+
+<img src="https://img.shields.io/badge/Python-3.10+-blue">
+<img src="https://img.shields.io/badge/FastAPI-Web%20Framework-green">
+<img src="https://img.shields.io/badge/XGBoost-ML-orange">
+<img src="https://img.shields.io/badge/Scapy-Packet%20Inspection-red">
+<img src="https://img.shields.io/badge/Docker-Container-blue">
+<img src="https://img.shields.io/badge/License-MIT-lightgrey">
+<img src="https://img.shields.io/badge/WebSocket-RealTime-yellow">
+<img src="https://img.shields.io/badge/PyTest-Testing-lightgrey">
+
+</p>
+
+
+<p align="center">
+<img src="https://readme-typing-svg.herokuapp.com/?lines=AI+Network+Threat+Detection;Deep+Packet+Inspection+System;Real-Time+Security+Dashboard;Machine+Learning+Threat+Detection&center=true&width=600&height=50">
+</p>
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,100:2c5364&height=120&section=header"/>
+
 # 🛡️ ThreatLens – AI Network Threat Detection Platform
 
 > Full-stack Python network security platform with Deep Packet Inspection (DPI), XGBoost ML classification, real-time web dashboard, firewall rule management, adware blocking, and PDF/CSV reporting.
@@ -406,4 +426,5 @@ ThreatLens is for **defensive** network monitoring of networks you own or are au
 =======
 # ThreatLens-DPI-Engine-AI-based-Deep-Packet-Inspection-System
 Full-stack Python network security platform with Deep Packet Inspection (DPI), XGBoost ML classification, real-time web dashboard, firewall rule management, adware blocking, and PDF/CSV reporting.
->>>>>>> cbe76f5f46fd0b84d2fada57812a4abaef551010
+
+<img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,100:2c5364&height=120&section=footer"/>
