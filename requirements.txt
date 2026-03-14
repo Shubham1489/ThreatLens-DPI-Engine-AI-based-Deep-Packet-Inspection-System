@@ -1,0 +1,35 @@
+# ThreatLens – Python Dependencies
+# Install with:  pip install -r requirements.txt
+
+# ── Web Framework ──────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+jinja2>=3.1.0
+python-multipart>=0.0.20
+
+# ── Packet Capture & Analysis ──────────────────────────
+scapy>=2.6.0
+
+# ── Machine Learning ───────────────────────────────────
+scikit-learn>=1.6.0
+xgboost>=2.1.0
+numpy>=2.0.0
+pandas>=2.2.0
+imbalanced-learn>=0.13.0
+
+# ── Database ───────────────────────────────────────────
+sqlalchemy>=2.0.0
+
+# ── Report Export ──────────────────────────────────────
+reportlab>=4.2.0
+
+# ── Alerting ───────────────────────────────────────────
+aiosmtplib>=3.0.0
+httpx>=0.28.0
+
+# ── Config ─────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── Dev / Testing ──────────────────────────────────────
+pytest>=9.0.0
+pytest-asyncio>=1.0.0

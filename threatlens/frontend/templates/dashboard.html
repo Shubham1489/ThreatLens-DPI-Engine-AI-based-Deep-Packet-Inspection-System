@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block pagetitle %}Dashboard{% endblock %}
+
+{% block content %}
+
+<!-- KPI Cards -->
+<div class="kpi-grid">
+  <div class="kpi-card blue">
+    <div class="kpi-icon blue"><i class="fa-solid fa-network-wired"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Total Packets</div>
+      <div class="kpi-value" id="kpi-packets">0</div>
+      <div class="kpi-sub" id="kpi-pps">0 pkt/s</div>
+    </div>
+  </div>
+  <div class="kpi-card red">
+    <div class="kpi-icon red"><i class="fa-solid fa-ban"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Blocked</div>
+      <div class="kpi-value" id="kpi-blocked">0</div>
+      <div class="kpi-sub">packets dropped</div>
+    </div>
+  </div>
+  <div class="kpi-card yellow">
+    <div class="kpi-icon yellow"><i class="fa-solid fa-bell"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Alerts</div>
+      <div class="kpi-value" id="kpi-alerts">0</div>
+      <div class="kpi-sub">threats detected</div>
+    </div>
+  </div>
+  <div class="kpi-card green">
+    <div class="kpi-icon green"><i class="fa-solid fa-diagram-project"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Active Flows</div>
+      <div class="kpi-value" id="kpi-flows">0</div>
+      <div class="kpi-sub">connections tracked</div>
+    </div>
+  </div>
+</div>
+
+<!-- Charts row -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Live Traffic (packets/sec)</div>
+      <span class="badge badge-allowed" style="font-size:9px">REAL-TIME</span>
+    </div>
+    <div class="chart-wrap" id="chart-pps"></div>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Traffic by Application</div>
+    </div>
+    <div class="chart-wrap" id="chart-apps"></div>
+  </div>
+</div>
+
+<!-- Threats + Bytes row -->
+<div class="grid-2">
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Recent Threats</div>
+      <a href="/alerts" class="btn btn-ghost btn-sm">View All</a>
+    </div>
+    <table class="data-table" id="threats-table">
+      <thead>
+        <tr>
+          <th>Type</th><th>Severity</th><th>Source IP</th><th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="threats-body">
+        <tr><td colspan="4" class="empty-state"><i class="fa-solid fa-shield-check"></i>No threats detected</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Top Talkers</div>
+    </div>
+    <table class="data-table" id="talkers-table">
+      <thead>
+        <tr><th>Source IP</th><th>App</th><th>Packets</th><th>Bytes</th></tr>
+      </thead>
+      <tbody id="talkers-body">
+        <tr><td colspan="4" class="empty-state"><i class="fa-solid fa-signal"></i>No data yet</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TLDashboard = {
+  ppsChart: null,
+  appChart: null,
+  ppsData: Array(30).fill(0),
+  appCounts: {},
+  recentAlerts: [],
+  talkers: {},
+
+  init() {
+    this.buildPpsChart();
+    this.buildAppChart();
+    this.fetchInitial();
+  },
+
+  async fetchInitial() {
+    const [stats, alerts, packets] = await Promise.all([
+      fetch('/api/stats').then(r=>r.json()),
+      fetch('/api/alerts?limit=10').then(r=>r.json()),
+      fetch('/api/packets?limit=200').then(r=>r.json()),
+    ]);
+    this.onStats(stats);
+    alerts.forEach(a => this.addAlert(a));
+    packets.forEach(p => this.processTalker(p));
+    this.renderTalkers();
+  },
+
+  onStats(s) {
+    document.getElementById('kpi-packets').textContent  = (s.total_packets||0).toLocaleString();
+    document.getElementById('kpi-blocked').textContent  = (s.blocked_count||0).toLocaleString();
+    document.getElementById('kpi-alerts').textContent   = (s.alerts_count||0).toLocaleString();
+    document.getElementById('kpi-flows').textContent    = (s.active_flows||0).toLocaleString();
+    document.getElementById('kpi-pps').textContent      = `${(s.packets_per_sec||0).toLocaleString()} pkt/s`;
+
+    // PPS chart update
+    this.ppsData.push(s.packets_per_sec || 0);
+    this.ppsData.shift();
+    if (this.ppsChart) this.ppsChart.updateSeries([{data: [...this.ppsData]}]);
+
+    // App chart
+    if (s.app_breakdown) {
+      const labels  = Object.keys(s.app_breakdown);
+      const values  = Object.values(s.app_breakdown);
+      if (this.appChart && labels.length) this.appChart.updateOptions({labels}, false, false);
+      if (this.appChart && values.length) this.appChart.updateSeries(values);
+    }
+  },
+
+  onPacket(p) {
+    this.processTalker(p);
+    if (Math.random() < 0.05) this.renderTalkers(); // throttle renders
+  },
+
+  processTalker(p) {
+    const k = p.src_ip;
+    if (!k) return;
+    if (!this.talkers[k]) this.talkers[k] = {ip: k, app: p.app_type, pkts: 0, bytes: 0};
+    this.talkers[k].pkts++;
+    this.talkers[k].bytes += (p.length || 0);
+    this.talkers[k].app = p.app_type;
+  },
+
+  renderTalkers() {
+    const sorted = Object.values(this.talkers).sort((a,b)=>b.pkts-a.pkts).slice(0,8);
+    const tbody  = document.getElementById('talkers-body');
+    if (!sorted.length) return;
+    tbody.innerHTML = sorted.map(t => `
+      <tr>
+        <td class="mono">${t.ip}</td>
+        <td>${t.app}</td>
+        <td class="mono">${t.pkts.toLocaleString()}</td>
+        <td class="mono">${TL.formatBytes(t.bytes)}</td>
+      </tr>`).join('');
+  },
+
+  addAlert(a) {
+    this.recentAlerts.unshift(a);
+    if (this.recentAlerts.length > 10) this.recentAlerts.pop();
+    const tbody = document.getElementById('threats-body');
+    tbody.innerHTML = this.recentAlerts.map(al => `
+      <tr>
+        <td><span style="font-weight:600;color:var(--text)">${al.type}</span></td>
+        <td>${TL.severityBadge(al.severity)}</td>
+        <td class="mono">${al.src_ip}</td>
+        <td class="text-muted">${(al.ts||'').slice(11,19)}</td>
+      </tr>`).join('');
+  },
+
+  buildPpsChart() {
+    this.ppsChart = new ApexCharts(document.getElementById('chart-pps'), {
+      chart:  { type: 'area', height: 240, background: 'transparent', animations: { enabled: true, easing: 'linear', dynamicAnimation: { speed: 1000 } }, toolbar: { show: false }, sparkline: { enabled: false } },
+      series: [{ name: 'Packets/sec', data: [...this.ppsData] }],
+      stroke: { curve: 'smooth', width: 2 },
+      fill:   { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.35, opacityTo: 0, stops: [0,90,100], colorStops: [{ offset:0, color:'#3b82f6', opacity:0.4 }, { offset:100, color:'#3b82f6', opacity:0 }] } },
+      colors: ['#3b82f6'],
+      xaxis:  { type: 'numeric', labels: { show: false }, axisBorder: { show: false }, axisTicks: { show: false } },
+      yaxis:  { labels: { style: { colors: ['#64748b'], fontSize: '11px', fontFamily: 'JetBrains Mono' } } },
+      grid:   { borderColor: 'rgba(255,255,255,0.05)', strokeDashArray: 3 },
+      tooltip:{ theme: 'dark', y: { formatter: v => v + ' pkt/s' } },
+      theme:  { mode: 'dark' },
+    });
+    this.ppsChart.render();
+  },
+
+  buildAppChart() {
+    this.appChart = new ApexCharts(document.getElementById('chart-apps'), {
+      chart:   { type: 'donut', height: 240, background: 'transparent', toolbar: { show: false } },
+      series:  [1],
+      labels:  ['Waiting…'],
+      colors:  ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#64748b'],
+      legend:  { position: 'bottom', labels: { colors: '#94a3b8' }, fontSize: '12px', fontFamily: 'Space Grotesk' },
+      dataLabels: { style: { fontFamily: 'Space Grotesk', fontSize: '11px' } },
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', color: '#94a3b8', fontFamily: 'Space Grotesk' } } } } },
+      tooltip:  { theme: 'dark' },
+      theme:    { mode: 'dark' },
+    });
+    this.appChart.render();
+  },
+};
+
+document.addEventListener('DOMContentLoaded', () => TLDashboard.init());
+</script>
+{% endblock %}

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ThreatLens – Login</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    :root {
+      --sidebar-bg:    #0f172a;
+      --primary:       #3b82f6;
+      --primary-dark:  #1d4ed8;
+      --primary-glow:  rgba(59,130,246,0.25);
+      --success:       #10b981;
+      --danger:        #ef4444;
+      --bg:            #0e1525;
+      --surface:       #151f32;
+      --surface2:      #1a2740;
+      --border:        rgba(255,255,255,0.07);
+      --text:          #e2e8f0;
+      --text-muted:    #64748b;
+      --text-dim:      #94a3b8;
+      --font:          'Space Grotesk', sans-serif;
+      --mono:          'JetBrains Mono', monospace;
+      --radius:        12px;
+      --radius-sm:     8px;
+      --shadow:        0 4px 24px rgba(0,0,0,0.4);
+      --shadow-glow:   0 0 20px var(--primary-glow);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      overflow: hidden;
+    }
+
+    .login-page {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Animated background grid */
+    .login-page::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 25% 25%, rgba(59,130,246,0.08) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(16,185,129,0.06) 0%, transparent 50%);
+      animation: bg-pulse 8s ease-in-out infinite alternate;
+    }
+    @keyframes bg-pulse {
+      from { opacity: 0.6; }
+      to   { opacity: 1; }
+    }
+
+    .login-card {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 36px;
+      box-shadow: var(--shadow), 0 0 60px rgba(59,130,246,0.07);
+      animation: card-in 0.5s ease;
+    }
+    @keyframes card-in {
+      from { transform: translateY(20px) scale(0.97); opacity: 0; }
+      to   { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    .login-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--success), var(--primary));
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+    .login-logo-icon {
+      width: 52px; height: 52px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; color: #fff;
+      box-shadow: var(--shadow-glow);
+    }
+    .login-logo-text {
+      display: flex; flex-direction: column;
+    }
+    .login-logo-name {
+      font-size: 22px; font-weight: 700; color: var(--text);
+    }
+    .login-logo-sub {
+      font-size: 11px; color: var(--text-muted); letter-spacing: 0.05em;
+    }
+
+    .login-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-align: center;
+      margin-bottom: 28px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      letter-spacing: 0.03em;
+    }
+    .input-wrap {
+      position: relative;
+    }
+    .input-wrap i {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+    .form-input {
+      width: 100%;
+      padding: 12px 14px 12px 42px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+    .form-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .btn-login {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-login:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+    }
+    .btn-login:active {
+      transform: translateY(0);
+    }
+
+    .error-msg {
+      background: rgba(239,68,68,0.12);
+      border: 1px solid rgba(239,68,68,0.3);
+      color: #f87171;
+      font-size: 13px;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-msg i { font-size: 14px; }
+
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="login-logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="login-logo-text">
+          <span class="login-logo-name">ThreatLens</span>
+          <span class="login-logo-sub">AI Security Platform</span>
+        </div>
+      </div>
+
+      <div class="login-title">Sign in to your dashboard</div>
+
+      {% if error %}
+      <div class="error-msg">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <form method="POST" action="/login">
+        <div class="form-group">
+          <label class="form-label" for="username">Username</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-user"></i>
+            <input class="form-input" type="text" id="username" name="username"
+                   placeholder="Enter your username" autocomplete="username" required autofocus/>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="password">Password</label>
+          <div class="input-wrap">
+            <i class="fa-solid fa-lock"></i>
+            <input class="form-input" type="password" id="password" name="password"
+                   placeholder="Enter your password" autocomplete="current-password" required/>
+          </div>
+        </div>
+
+        <button class="btn-login" type="submit">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          Sign In
+        </button>
+      </form>
+
+      <div class="login-footer">
+        &copy; 2026 ThreatLens &middot; Secure Network Intelligence
+      </div>
+    </div>
+  </div>
+</body>
+</html>

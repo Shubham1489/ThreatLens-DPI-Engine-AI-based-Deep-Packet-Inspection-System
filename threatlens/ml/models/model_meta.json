@@ -1,0 +1,32 @@
+{
+  "trained_at": "2026-03-14T19:51:27.234959+00:00",
+  "model_type": "xgboost",
+  "f1_score": 0.990739,
+  "cv_f1_mean": 0.990249,
+  "cv_f1_std": 0.00026,
+  "n_estimators": 300,
+  "classes": [
+    "ADWARE",
+    "DOS_ATTACK",
+    "MALWARE_C2",
+    "NORMAL",
+    "P2P_TRAFFIC",
+    "PORT_SCAN",
+    "TOR_TRAFFIC"
+  ],
+  "samples": 197962,
+  "smote_applied": true,
+  "features": [
+    "avg_pkt_size",
+    "pkt_count",
+    "flow_duration_sec",
+    "bytes_per_sec",
+    "dst_port",
+    "protocol_tcp",
+    "protocol_udp",
+    "has_sni",
+    "inter_arrival_mean",
+    "inter_arrival_std",
+    "pkt_size_std"
+  ]
+}

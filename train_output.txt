@@ -1,0 +1,63 @@
+﻿
+============================================================
+  ThreatLens Model Training v2.0
+============================================================
+
+[1/6] Loading data: C:\Users\sswai\Documents\threatlens_project\data\processed\threatlens_dataset.csv
+      197,962 samples loaded
+      ADWARE             6,500  Γûê
+      DOS_ATTACK        58,385  ΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûê
+      MALWARE_C2         9,446  Γûê
+      NORMAL            97,054  ΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûêΓûê
+      P2P_TRAFFIC        4,000  
+      PORT_SCAN         19,077  ΓûêΓûêΓûê
+      TOR_TRAFFIC        3,500  
+
+[2/6] Scaling features...
+[3/6] Applying SMOTE for class balance...
+      Before SMOTE: 197,962 ΓåÆ After: 679,378
+
+[4/6] Training XGBoost on 543,502 samples...
+      Done in 50.2s (xgboost)
+
+[5/6] 5-fold stratified cross-validation...
+      CV F1 scores: ['0.9902', '0.9898', '0.9902', '0.9904', '0.9906']
+      CV F1 mean:   0.9902 ┬▒ 0.0003
+
+      Validation F1: 0.9907
+
+              precision    recall  f1-score   support
+
+      ADWARE       1.00      1.00      1.00     19410
+  DOS_ATTACK       0.96      0.99      0.98     19411
+  MALWARE_C2       0.99      0.99      0.99     19411
+      NORMAL       0.99      0.99      0.99     19411
+ P2P_TRAFFIC       1.00      1.00      1.00     19411
+   PORT_SCAN       0.99      0.96      0.97     19411
+ TOR_TRAFFIC       1.00      1.00      1.00     19411
+
+    accuracy                           0.99    135876
+   macro avg       0.99      0.99      0.99    135876
+weighted avg       0.99      0.99      0.99    135876
+
+  Confusion Matrix:
+                   ADWARE  DOS_AT  MALWAR  NORMAL  P2P_TR  PORT_S  TOR_TR
+            ADWARE  19410       0       0       0       0       0       0
+        DOS_ATTACK      0   19304       0      39       0      68       0
+        MALWARE_C2      0       1   19271      64       0      75       0
+            NORMAL      2      90      99   19138       0      82       0
+       P2P_TRAFFIC      0       0       0       0   19411       0       0
+         PORT_SCAN      0     645      10      83       0   18673       0
+       TOR_TRAFFIC      0       0       0       0       0       0   19411
+
+[6/6] Saving model...
+
+  Γ£ô Model saved  (F1 0.0000 ΓåÆ 0.9907)
+    C:\Users\sswai\Documents\threatlens_project\threatlens\ml\models\xgb_model.pkl
+    C:\Users\sswai\Documents\threatlens_project\threatlens\ml\models\scaler.pkl
+    C:\Users\sswai\Documents\threatlens_project\threatlens\ml\models\model_meta.json
+
+============================================================
+  Training complete. Restart ThreatLens to load the new model.
+============================================================
+

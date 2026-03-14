@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% block title %}Firewall Rules{% endblock %}
+{% block pagetitle %}Firewall Rules{% endblock %}
+{% set active = 'rules' %}
+
+{% block content %}
+
+<!-- Add Rule Form -->
+<div class="card" style="margin-bottom:20px">
+  <div class="card-title">Add New Rule</div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+    <div class="form-group" style="margin:0;flex:0 0 160px">
+      <label class="form-label">Rule Type</label>
+      <select class="form-select" id="new-rule-type">
+        <option value="DOMAIN">Domain</option>
+        <option value="IP">IP Address</option>
+        <option value="APP">Application</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin:0;flex:1;min-width:200px">
+      <label class="form-label">Value</label>
+      <input class="form-input" id="new-rule-value" placeholder="e.g. doubleclick.net or 192.168.1.50"/>
+    </div>
+    <div class="form-group" style="margin:0;flex:1;min-width:160px">
+      <label class="form-label">Notes (optional)</label>
+      <input class="form-input" id="new-rule-notes" placeholder="Why this rule exists"/>
+    </div>
+    <button class="btn btn-primary" onclick="TLRules.addRule()">
+      <i class="fa-solid fa-plus"></i> Add Rule
+    </button>
+  </div>
+</div>
+
+<!-- Rules Table -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Active Rules (<span id="rule-count">0</span>)</div>
+    <div style="display:flex;gap:8px">
+      <select class="form-select" style="width:140px" id="filter-rtype">
+        <option value="">All Types</option>
+        <option>DOMAIN</option><option>IP</option><option>APP</option>
+      </select>
+    </div>
+  </div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Type</th><th>Value</th><th>Notes</th><th>Created</th><th>Status</th><th>Actions</th></tr>
+    </thead>
+    <tbody id="rules-body">
+      <tr><td colspan="6" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading rules…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TLRules = {
+  data: [],
+
+  async load() {
+    const res = await fetch('/api/rules');
+    this.data  = await res.json();
+    this.render();
+  },
+
+  render() {
+    const typeFilter = document.getElementById('filter-rtype').value;
+    let rows = this.data;
+    if (typeFilter) rows = rows.filter(r => r.type === typeFilter);
+
+    document.getElementById('rule-count').textContent = this.data.length;
+
+    const tbody = document.getElementById('rules-body');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fa-solid fa-shield"></i> No rules found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(r => `
+      <tr>
+        <td><span class="badge ${r.type==='DOMAIN'?'badge-medium':r.type==='IP'?'badge-high':'badge-low'}">${r.type}</span></td>
+        <td class="mono" style="color:var(--text)">${r.value}</td>
+        <td class="text-muted">${r.notes || '—'}</td>
+        <td class="mono text-muted" style="font-size:11px">${(r.created_at||'').slice(0,10)}</td>
+        <td>
+          <label class="toggle-switch">
+            <input type="checkbox" ${r.enabled?'checked':''} onchange="TLRules.toggle(${r.id})"/>
+            <span class="toggle-slider"></span>
+            <span style="font-size:12px;color:var(--text-muted)">${r.enabled?'Enabled':'Disabled'}</span>
+          </label>
+        </td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="TLRules.remove(${r.id})">
+            <i class="fa-solid fa-trash"></i>
+          </button>
+        </td>
+      </tr>`).join('');
+  },
+
+  async addRule() {
+    const type  = document.getElementById('new-rule-type').value;
+    const value = document.getElementById('new-rule-value').value.trim();
+    const notes = document.getElementById('new-rule-notes').value.trim();
+    if (!value) { alert('Please enter a value.'); return; }
+
+    const res = await fetch(`/api/rules?rule_type=${encodeURIComponent(type)}&value=${encodeURIComponent(value)}&notes=${encodeURIComponent(notes)}`, { method:'POST' });
+    if (res.ok) {
+      document.getElementById('new-rule-value').value = '';
+      document.getElementById('new-rule-notes').value = '';
+      await this.load();
+    }
+  },
+
+  async remove(id) {
+    if (!confirm('Delete this rule?')) return;
+    await fetch(`/api/rules/${id}`, { method:'DELETE' });
+    await this.load();
+  },
+
+  async toggle(id) {
+    await fetch(`/api/rules/${id}/toggle`, { method:'PATCH' });
+    await this.load();
+  },
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  TLRules.load();
+  document.getElementById('filter-rtype').addEventListener('change', () => TLRules.render());
+});
+</script>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block pagetitle %}Reports & Export{% endblock %}
+{% set active = 'reports' %}
+
+{% block content %}
+
+<!-- Summary stats -->
+<div class="kpi-grid" id="report-kpis" style="margin-bottom:24px"></div>
+
+<div class="grid-2">
+  <!-- Export card -->
+  <div class="card">
+    <div class="card-title">Export Report</div>
+    <p class="text-muted" style="margin-bottom:20px;font-size:13px">
+      Download a snapshot of the current session's traffic data, alerts, and statistics.
+    </p>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <a href="/api/reports/csv" class="btn btn-ghost" download>
+        <i class="fa-solid fa-file-csv" style="color:var(--success)"></i>
+        Download CSV (Packet Log)
+      </a>
+      <a href="/api/reports/pdf" class="btn btn-ghost" download>
+        <i class="fa-solid fa-file-pdf" style="color:var(--danger)"></i>
+        Download PDF Report
+      </a>
+    </div>
+  </div>
+
+  <!-- App breakdown card -->
+  <div class="card">
+    <div class="card-title">Application Breakdown</div>
+    <div id="report-app-chart" style="min-height:220px"></div>
+  </div>
+</div>
+
+<!-- Alert summary -->
+<div class="card">
+  <div class="card-title">Alert Summary</div>
+  <table class="data-table">
+    <thead>
+      <tr><th>Alert Type</th><th>Count</th><th>Most Recent</th><th>Severity</th></tr>
+    </thead>
+    <tbody id="alert-summary-body">
+      <tr><td colspan="4" class="empty-state"><i class="fa-solid fa-spinner fa-spin"></i> Loading…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function loadReportData() {
+  const [stats, alerts] = await Promise.all([
+    fetch('/api/stats').then(r=>r.json()),
+    fetch('/api/alerts?limit=200').then(r=>r.json()),
+  ]);
+
+  // KPIs
+  const kpis = [
+    { label:'Total Packets', value: (stats.total_packets||0).toLocaleString(), icon:'fa-network-wired', color:'blue' },
+    { label:'Total Data',    value: formatBytes(stats.total_bytes||0),          icon:'fa-database',      color:'green' },
+    { label:'Blocked',       value: (stats.blocked_count||0).toLocaleString(),  icon:'fa-ban',           color:'red' },
+    { label:'Total Alerts',  value: (stats.alerts_count||0).toLocaleString(),   icon:'fa-bell',          color:'yellow' },
+  ];
+  document.getElementById('report-kpis').innerHTML = kpis.map(k => `
+    <div class="kpi-card ${k.color}">
+      <div class="kpi-icon ${k.color}"><i class="fa-solid ${k.icon}"></i></div>
+      <div class="kpi-body">
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-value">${k.value}</div>
+      </div>
+    </div>`).join('');
+
+  // App chart
+  const breakdown = stats.app_breakdown || {};
+  const labels = Object.keys(breakdown);
+  const values = Object.values(breakdown);
+  if (labels.length) {
+    new ApexCharts(document.getElementById('report-app-chart'), {
+      chart: { type:'bar', height:220, background:'transparent', toolbar:{show:false} },
+      series:[{ name:'Packets', data:values }],
+      xaxis: { categories: labels, labels:{style:{colors:'#94a3b8',fontFamily:'Space Grotesk'}} },
+      yaxis: { labels:{style:{colors:'#94a3b8',fontFamily:'JetBrains Mono',fontSize:'11px'}} },
+      colors:['#3b82f6'],
+      grid:  { borderColor:'rgba(255,255,255,0.05)' },
+      tooltip:{ theme:'dark' },
+      theme: { mode:'dark' },
+      plotOptions:{ bar:{ borderRadius:4, columnWidth:'55%' } },
+    }).render();
+  }
+
+  // Alert summary
+  const byType = {};
+  alerts.forEach(a => {
+    if (!byType[a.type]) byType[a.type] = { count:0, latest:'', severity: a.severity };
+    byType[a.type].count++;
+    if (!byType[a.type].latest || a.ts > byType[a.type].latest) byType[a.type].latest = a.ts;
+  });
+  const tbody = document.getElementById('alert-summary-body');
+  const rows  = Object.entries(byType).sort((a,b)=>b[1].count-a[1].count);
+  tbody.innerHTML = rows.length ? rows.map(([type, d]) => `
+    <tr>
+      <td style="font-weight:600;color:var(--text)">${type}</td>
+      <td class="mono">${d.count}</td>
+      <td class="mono text-muted">${(d.latest||'').slice(0,19).replace('T',' ')}</td>
+      <td>${TL.severityBadge(d.severity)}</td>
+    </tr>`).join('')
+  : '<tr><td colspan="4" class="empty-state"><i class="fa-solid fa-shield-check"></i> No alerts recorded</td></tr>';
+}
+
+function formatBytes(b) {
+  if (b<1024) return b+' B';
+  if (b<1048576) return (b/1024).toFixed(1)+' KB';
+  return (b/1048576).toFixed(1)+' MB';
+}
+
+document.addEventListener('DOMContentLoaded', loadReportData);
+</script>
+{% endblock %}

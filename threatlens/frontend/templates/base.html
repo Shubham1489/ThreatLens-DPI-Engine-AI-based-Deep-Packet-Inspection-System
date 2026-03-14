@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ThreatLens – {% block title %}Dashboard{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/apexcharts/3.45.1/apexcharts.min.js"></script>
+  <link rel="stylesheet" href="/static/css/threatlens.css"/>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><i class="fa-solid fa-shield-halved"></i></div>
+    <div class="logo-text">
+      <span class="logo-name">ThreatLens</span>
+      <span class="logo-sub">AI Security Platform</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-label">MAIN</div>
+    <a href="/" class="nav-item {% if active=='dashboard' %}active{% endif %}">
+      <i class="fa-solid fa-gauge-high"></i><span>Dashboard</span>
+    </a>
+    <a href="/traffic" class="nav-item {% if active=='traffic' %}active{% endif %}">
+      <i class="fa-solid fa-wave-square"></i><span>Live Traffic</span>
+      <span class="nav-badge pulse" id="live-badge">LIVE</span>
+    </a>
+    <a href="/alerts" class="nav-item {% if active=='alerts' %}active{% endif %}">
+      <i class="fa-solid fa-bell"></i><span>Alerts</span>
+      <span class="nav-count" id="alert-count">0</span>
+    </a>
+
+    <div class="nav-section-label" style="margin-top:1.5rem">CONTROL</div>
+    <a href="/rules" class="nav-item {% if active=='rules' %}active{% endif %}">
+      <i class="fa-solid fa-shield-virus"></i><span>Firewall Rules</span>
+    </a>
+    <a href="/reports" class="nav-item {% if active=='reports' %}active{% endif %}">
+      <i class="fa-solid fa-file-chart-column"></i><span>Reports</span>
+    </a>
+    <a href="/ml-training" class="nav-item {% if active=='ml' %}active{% endif %}">
+      <i class="fa-solid fa-brain"></i><span>ML Training</span>
+    </a>
+  </nav>
+
+  <div style="padding: 8px 12px;">
+    <a href="/logout" class="nav-item" style="color:var(--danger);">
+      <i class="fa-solid fa-right-from-bracket"></i><span>Logout</span>
+    </a>
+  </div>
+
+  <div class="sidebar-status">
+    <div class="status-dot" id="engine-dot"></div>
+    <span id="engine-status">Connecting…</span>
+  </div>
+</aside>
+
+<!-- Main content -->
+<div class="main-wrap">
+  <!-- Topbar -->
+  <header class="topbar">
+    <button class="topbar-toggle" onclick="document.getElementById('sidebar').classList.toggle('collapsed')">
+      <i class="fa-solid fa-bars"></i>
+    </button>
+    <div class="topbar-title">{% block pagetitle %}Dashboard{% endblock %}</div>
+    <div class="topbar-right">
+      <div class="topbar-stat">
+        <span class="ts-label">Packets/sec</span>
+        <span class="ts-val mono" id="top-pps">0</span>
+      </div>
+      <div class="topbar-stat">
+        <span class="ts-label">Blocked</span>
+        <span class="ts-val mono danger" id="top-blocked">0</span>
+      </div>
+      <div class="topbar-clock mono" id="topbar-clock"></div>
+    </div>
+  </header>
+
+  <!-- Page content -->
+  <main class="content">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="/static/js/base.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}ML Training{% endblock %}
+{% block pagetitle %}ML Auto-Training{% endblock %}
+{% set active = 'ml' %}
+
+{% block content %}
+
+<!-- Status cards -->
+<div class="kpi-grid" id="ml-kpis" style="margin-bottom:24px">
+  <div class="kpi-card blue">
+    <div class="kpi-icon blue"><i class="fa-solid fa-brain"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Model F1 Score</div>
+      <div class="kpi-value" id="kpi-f1">—</div>
+      <div class="kpi-sub">weighted average</div>
+    </div>
+  </div>
+  <div class="kpi-card green">
+    <div class="kpi-icon green"><i class="fa-solid fa-database"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Training Buffer</div>
+      <div class="kpi-value" id="kpi-buffer">0</div>
+      <div class="kpi-sub">live examples collected</div>
+    </div>
+  </div>
+  <div class="kpi-card yellow">
+    <div class="kpi-icon yellow"><i class="fa-solid fa-rotate"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Online Retrains</div>
+      <div class="kpi-value" id="kpi-online">0</div>
+      <div class="kpi-sub">auto-triggered</div>
+    </div>
+  </div>
+  <div class="kpi-card red">
+    <div class="kpi-icon red"><i class="fa-solid fa-calendar-check"></i></div>
+    <div class="kpi-body">
+      <div class="kpi-label">Scheduled Retrains</div>
+      <div class="kpi-value" id="kpi-sched">0</div>
+      <div class="kpi-sub">every 4 hours</div>
+    </div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Training Pipeline card -->
+  <div class="card">
+    <div class="card-title">Training Pipeline</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:20px">
+      <!-- Step 1 -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(59,130,246,0.2);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">1</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">Download Datasets</div>
+          <div style="font-size:12px;color:var(--text-muted)">NSL-KDD, CTU-13, Synthetic — download once</div>
+        </div>
+        <div id="step1-status" style="margin-left:auto"></div>
+      </div>
+      <!-- Step 2 -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(59,130,246,0.2);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">2</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">Train Base Model</div>
+          <div style="font-size:12px;color:var(--text-muted)">XGBoost on 190,000+ labelled flows</div>
+        </div>
+        <div id="step2-status" style="margin-left:auto"></div>
+      </div>
+      <!-- Step 3 -->
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(16,185,129,0.2);color:var(--success);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">3</div>
+        <div>
+          <div style="font-weight:600;font-size:13px">Live Auto-Training</div>
+          <div style="font-size:12px;color:var(--text-muted)">Continuous learning from real traffic</div>
+        </div>
+        <span class="badge badge-allowed" id="live-status">● ACTIVE</span>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="TLTrain.download()">
+        <i class="fa-solid fa-download"></i> Download Datasets
+      </button>
+      <button class="btn btn-ghost" onclick="TLTrain.trainSynthetic()">
+        <i class="fa-solid fa-flask"></i> Train Synthetic
+      </button>
+      <button class="btn btn-ghost" onclick="TLTrain.forceRetrain()">
+        <i class="fa-solid fa-rotate"></i> Force Retrain Now
+      </button>
+    </div>
+  </div>
+
+  <!-- How it works card -->
+  <div class="card">
+    <div class="card-title">Auto-Training Flow</div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:13px">
+      ${[
+        ['fa-wave-square','Live Traffic','Every completed network flow is analysed'],
+        ['fa-tag','Label Detection','Threats detected by rules + ML labels'],
+        ['fa-database','Buffer','New examples added to rolling training buffer'],
+        ['fa-bolt','Online Retrain','Model retrained when buffer hits 500 examples'],
+        ['fa-calendar','Scheduled','Full retrain runs every 4 hours automatically'],
+        ['fa-arrow-up-right-dots','Improvement','Best F1 model promoted to production'],
+      ].map(([icon,title,desc])=>`
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <i class="fa-solid ${icon}" style="color:var(--primary);width:16px;margin-top:2px;flex-shrink:0"></i>
+          <div><span style="font-weight:600;color:var(--text)">${title}:</span> <span style="color:var(--text-muted)">${desc}</span></div>
+        </div>`).join('')}
+    </div>
+  </div>
+</div>
+
+<!-- Log output -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title">Training Log</div>
+    <button class="btn btn-ghost btn-sm" onclick="document.getElementById('train-log').innerHTML=''">Clear</button>
+  </div>
+  <div id="train-log" style="font-family:var(--mono);font-size:12px;line-height:1.7;max-height:300px;overflow-y:auto;background:var(--surface2);padding:14px;border-radius:var(--radius-sm);color:var(--text-dim)">
+    <span style="color:var(--text-muted)">Waiting for training events…</span>
+  </div>
+</div>
+
+<!-- Analyst Feedback -->
+<div class="card" style="margin-top:20px">
+  <div class="card-title">Analyst Feedback</div>
+  <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">
+    Confirm threat detections or report false positives. Feedback is used as high-weight training examples.
+  </p>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+    <div class="form-group" style="margin:0;flex:0 0 180px">
+      <label class="form-label">Source IP</label>
+      <input class="form-input" id="fb-ip" placeholder="e.g. 10.0.0.5"/>
+    </div>
+    <div class="form-group" style="margin:0;flex:0 0 200px">
+      <label class="form-label">Threat Label</label>
+      <select class="form-select" id="fb-label">
+        <option>PORT_SCAN</option><option>DOS_ATTACK</option>
+        <option>MALWARE_C2</option><option>ADWARE</option>
+        <option>TOR_TRAFFIC</option><option>P2P_TRAFFIC</option>
+        <option>NORMAL</option>
+      </select>
+    </div>
+    <button class="btn btn-primary" onclick="TLTrain.submitFeedback()">
+      <i class="fa-solid fa-check"></i> Submit Feedback
+    </button>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TLTrain = {
+
+  log(msg, color='var(--text-dim)') {
+    const el = document.getElementById('train-log');
+    const ts  = new Date().toTimeString().slice(0,8);
+    el.innerHTML += `<div style="color:${color}">[${ts}] ${msg}</div>`;
+    el.scrollTop = el.scrollHeight;
+    if (el.children.length === 1) el.querySelector('span')?.remove();
+  },
+
+  async refresh() {
+    try {
+      const s = await fetch('/api/autotrain/stats').then(r=>r.json());
+      document.getElementById('kpi-f1').textContent     = s.last_f1 != null ? s.last_f1.toFixed(4) : '—';
+      document.getElementById('kpi-buffer').textContent = (s.buffer_size||0).toLocaleString();
+      document.getElementById('kpi-online').textContent = s.online_retrains||0;
+      document.getElementById('kpi-sched').textContent  = s.scheduled_retrains||0;
+      if (s.last_retrain) {
+        this.log(`Last retrain: ${s.last_retrain.slice(0,19).replace('T',' ')}  F1=${s.last_f1}`, 'var(--success)');
+      }
+    } catch(e) {}
+  },
+
+  async download() {
+    this.log('Starting dataset download… (this may take a few minutes)', 'var(--primary)');
+    this.log('Running: python scripts/download_datasets.py --dataset all', 'var(--text-muted)');
+    this.log('Open a terminal and run the command above in your threatlens_project folder.', 'var(--warning)');
+    this.log('After download completes, click "Force Retrain Now".', 'var(--text-muted)');
+  },
+
+  async trainSynthetic() {
+    this.log('Starting synthetic training… (run in terminal):', 'var(--primary)');
+    this.log('python scripts/train_model.py --synthetic --n 50000', 'var(--text-dim)');
+    this.log('After training, restart ThreatLens to load the new model.', 'var(--text-muted)');
+  },
+
+  async forceRetrain() {
+    this.log('Triggering full retrain…', 'var(--primary)');
+    try {
+      const r = await fetch('/api/autotrain/retrain', {method:'POST'});
+      const d = await r.json();
+      this.log(`Retrain: ${d.status}`, 'var(--success)');
+      setTimeout(() => this.refresh(), 5000);
+    } catch(e) {
+      this.log(`Error: ${e}`, 'var(--danger)');
+    }
+  },
+
+  async submitFeedback() {
+    const ip    = document.getElementById('fb-ip').value.trim();
+    const label = document.getElementById('fb-label').value;
+    if (!ip) { alert('Enter a source IP.'); return; }
+    try {
+      const r = await fetch(`/api/autotrain/confirm?src_ip=${encodeURIComponent(ip)}&label=${encodeURIComponent(label)}`, {method:'POST'});
+      const d = await r.json();
+      this.log(`Feedback stored: ${label} for ${ip} (weight=5×)`, 'var(--success)');
+      document.getElementById('fb-ip').value = '';
+    } catch(e) {
+      this.log(`Error: ${e}`, 'var(--danger)');
+    }
+  },
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  TLTrain.refresh();
+  setInterval(() => TLTrain.refresh(), 10000);
+});
+</script>
+{% endblock %}

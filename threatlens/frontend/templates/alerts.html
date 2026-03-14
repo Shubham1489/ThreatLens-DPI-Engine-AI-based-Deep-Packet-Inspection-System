@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Alerts{% endblock %}
+{% block pagetitle %}Security Alerts{% endblock %}
+{% set active = 'alerts' %}
+
+{% block content %}
+<div class="card-header" style="margin-bottom:20px">
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <select class="form-select" style="width:160px" id="filter-severity">
+      <option value="">All Severities</option>
+      <option>CRITICAL</option><option>HIGH</option>
+      <option>MEDIUM</option><option>LOW</option>
+    </select>
+    <select class="form-select" style="width:160px" id="filter-type">
+      <option value="">All Types</option>
+      <option>PORT_SCAN</option><option>DOS_ATTACK</option>
+      <option>MALWARE_C2</option><option>ADWARE</option>
+      <option>TOR_TRAFFIC</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:10px">
+    <button class="btn btn-ghost btn-sm" onclick="TLAlerts.refresh()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+    <button class="btn btn-ghost btn-sm" onclick="TLAlerts.ackAll()"><i class="fa-solid fa-check-double"></i> Ack All</button>
+  </div>
+</div>
+
+<div class="card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Time</th><th>Type</th><th>Severity</th>
+        <th>Source IP</th><th>Description</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="alerts-body">
+      <tr><td colspan="6" class="empty-state"><i class="fa-solid fa-shield-check"></i>No alerts</td></tr>
+    </tbody>
+  </table>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TLAlerts = {
+  data: [],
+
+  async refresh() {
+    const res = await fetch('/api/alerts?limit=100');
+    this.data  = await res.json();
+    this.render();
+  },
+
+  onAlert(a) { this.data.unshift(a); this.render(); },
+
+  render() {
+    const sev  = document.getElementById('filter-severity').value;
+    const type = document.getElementById('filter-type').value;
+    let rows   = this.data;
+    if (sev)  rows = rows.filter(a => a.severity === sev);
+    if (type) rows = rows.filter(a => a.type     === type);
+
+    const tbody = document.getElementById('alerts-body');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state"><i class="fa-solid fa-shield-check"></i>No alerts match filter</td></tr>';
+      return;
+    }
+    tbody.innerHTML = rows.map(a => `
+      <tr>
+        <td class="mono text-muted">${(a.ts||'').slice(0,19).replace('T',' ')}</td>
+        <td><strong>${a.type}</strong></td>
+        <td>${TL.severityBadge(a.severity)}</td>
+        <td class="mono">${a.src_ip}</td>
+        <td class="text-muted" style="max-width:320px;overflow:hidden;text-overflow:ellipsis">${a.description}</td>
+        <td>
+          ${a.acknowledged
+            ? '<span class="badge badge-normal">ACK</span>'
+            : `<button class="btn btn-ghost btn-sm" onclick="TLAlerts.ack(${a.id})">Ack</button>`}
+        </td>
+      </tr>`).join('');
+  },
+
+  ack(id) {
+    const a = this.data.find(x => x.id == id);
+    if (a) a.acknowledged = true;
+    this.render();
+  },
+
+  ackAll() { this.data.forEach(a => a.acknowledged = true); this.render(); },
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  TLAlerts.refresh();
+  document.getElementById('filter-severity').addEventListener('change', () => TLAlerts.render());
+  document.getElementById('filter-type').addEventListener('change',     () => TLAlerts.render());
+});
+</script>
+{% endblock %}

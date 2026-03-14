@@ -1,0 +1,37 @@
+version: "3.9"
+
+services:
+  threatlens:
+    build: .
+    container_name: threatlens
+    ports:
+      - "${PORT:-8000}:8000"
+    env_file:
+      - .env
+    environment:
+      - CAPTURE_INTERFACE=${CAPTURE_INTERFACE:-}
+      - PCAP_FILE=${PCAP_FILE:-}
+      - CORS_ORIGINS=${CORS_ORIGINS:-*}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    volumes:
+      - ./data:/app/data
+    # Required for live packet capture
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    network_mode: host   # access all host interfaces
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3

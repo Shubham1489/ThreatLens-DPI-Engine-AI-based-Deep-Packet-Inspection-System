@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Live Traffic{% endblock %}
+{% block pagetitle %}Live Traffic Monitor{% endblock %}
+{% set active = 'traffic' %}
+
+{% block content %}
+
+<div class="card-header" style="margin-bottom:20px">
+  <div style="display:flex;gap:10px;align-items:center">
+    <input class="form-input" id="search-ip" placeholder="Filter by IP…" style="width:180px"/>
+    <select class="form-select" id="filter-proto" style="width:120px">
+      <option value="">Protocol</option>
+      <option>TCP</option><option>UDP</option><option>ICMP</option>
+    </select>
+    <select class="form-select" id="filter-app" style="width:140px">
+      <option value="">Application</option>
+      <option>YouTube</option><option>Facebook</option><option>Google</option>
+      <option>Adware</option><option>HTTPS</option><option>HTTP</option><option>DNS</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="badge badge-allowed" id="live-indicator">● LIVE</span>
+    <span class="text-muted mono" id="pkt-counter" style="font-size:12px">0 packets</span>
+    <button class="btn btn-ghost btn-sm" onclick="TLTraffic.clear()"><i class="fa-solid fa-trash"></i> Clear</button>
+  </div>
+</div>
+
+<div class="card" style="padding:0;overflow:hidden">
+  <div style="max-height:600px;overflow-y:auto">
+    <table class="data-table">
+      <thead style="position:sticky;top:0;background:var(--surface);z-index:10">
+        <tr>
+          <th>Time</th><th>Src IP</th><th>Dst IP</th>
+          <th>Proto</th><th>Port</th><th>App</th>
+          <th>SNI / Host</th><th>Size</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="traffic-body">
+        <tr><td colspan="9" class="empty-state"><i class="fa-solid fa-satellite-dish"></i> Waiting for packets…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const TLTraffic = {
+  packets: [],
+  total: 0,
+
+  onPacket(p) {
+    this.packets.unshift(p);
+    if (this.packets.length > 500) this.packets.pop();
+    this.total++;
+    document.getElementById('pkt-counter').textContent = this.total.toLocaleString() + ' packets';
+    this.renderTop();
+  },
+
+  renderTop() {
+    const ipFilter    = document.getElementById('search-ip').value.toLowerCase();
+    const protoFilter = document.getElementById('filter-proto').value;
+    const appFilter   = document.getElementById('filter-app').value;
+
+    let rows = this.packets;
+    if (ipFilter)    rows = rows.filter(p => (p.src_ip||'').includes(ipFilter) || (p.dst_ip||'').includes(ipFilter));
+    if (protoFilter) rows = rows.filter(p => p.protocol === protoFilter);
+    if (appFilter)   rows = rows.filter(p => p.app_type === appFilter);
+
+    const tbody = document.getElementById('traffic-body');
+    tbody.innerHTML = rows.slice(0,200).map(p => `
+      <tr style="${p.blocked?'background:rgba(239,68,68,0.07)':''}">
+        <td class="mono text-muted" style="font-size:11px">${(p.ts||'').slice(11,23)}</td>
+        <td class="mono">${p.src_ip||'—'}</td>
+        <td class="mono text-muted">${p.dst_ip||'—'}</td>
+        <td><span class="badge badge-normal">${p.protocol||'?'}</span></td>
+        <td class="mono text-muted">${p.dst_port||'—'}</td>
+        <td style="color:var(--primary)">${p.app_type||'Unknown'}</td>
+        <td class="mono text-muted" style="font-size:11px;max-width:200px;overflow:hidden;text-overflow:ellipsis">${p.sni||'—'}</td>
+        <td class="mono">${p.length||0}B</td>
+        <td>${TL.blockedBadge(p.blocked)}</td>
+      </tr>`).join('');
+  },
+
+  clear() { this.packets = []; this.total = 0; document.getElementById('traffic-body').innerHTML = ''; },
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['search-ip','filter-proto','filter-app'].forEach(id =>
+    document.getElementById(id).addEventListener('input', () => TLTraffic.renderTop())
+  );
+});
+</script>
+{% endblock %}

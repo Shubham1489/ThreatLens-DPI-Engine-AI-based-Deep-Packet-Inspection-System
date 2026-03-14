@@ -1,0 +1,87 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.7, pytest-9.0.2, pluggy-1.6.0 -- C:\Users\sswai\Documents\threatlens_project\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\sswai\Documents\threatlens_project
+plugins: anyio-4.12.1, asyncio-1.3.0
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 24 items
+
+tests/test_threatlens.py::test_sni_extraction_youtube PASSED             [  4%]
+tests/test_threatlens.py::test_sni_extraction_facebook PASSED            [  8%]
+tests/test_threatlens.py::test_sni_extraction_empty PASSED               [ 12%]
+tests/test_threatlens.py::test_http_host_extraction PASSED               [ 16%]
+tests/test_threatlens.py::test_http_host_with_port PASSED                [ 20%]
+tests/test_threatlens.py::test_app_type_youtube PASSED                   [ 25%]
+tests/test_threatlens.py::test_app_type_adware PASSED                    [ 29%]
+tests/test_threatlens.py::test_app_type_unknown PASSED                   [ 33%]
+tests/test_threatlens.py::test_flow_created_on_first_packet PASSED       [ 37%]
+tests/test_threatlens.py::test_flow_accumulates_packets PASSED           [ 41%]
+tests/test_threatlens.py::test_separate_flows_different_tuples PASSED    [ 45%]
+tests/test_threatlens.py::test_rule_manager_add_and_block_domain PASSED  [ 50%]
+tests/test_threatlens.py::test_rule_manager_block_ip PASSED              [ 54%]
+tests/test_threatlens.py::test_rule_manager_remove PASSED                [ 58%]
+tests/test_threatlens.py::test_rule_manager_toggle PASSED                [ 62%]
+tests/test_threatlens.py::test_classify_normal PASSED                    [ 66%]
+tests/test_threatlens.py::test_classify_tor PASSED                       [ 70%]
+tests/test_threatlens.py::test_classify_dos PASSED                       [ 75%]
+tests/test_threatlens.py::test_parsed_packet_has_blocked_field PASSED    [ 79%]
+tests/test_threatlens.py::test_flow_tracker_returns_none_for_empty_src PASSED [ 83%]
+tests/test_threatlens.py::test_flow_tracker_returns_none_for_empty_protocol PASSED [ 87%]
+tests/test_threatlens.py::test_engine_stats_structure PASSED             [ 91%]
+tests/test_threatlens.py::test_security_score_range PASSED               [ 95%]
+tests/test_threatlens.py::test_engine_rule_blocking PASSED               [100%]
+
+============================== warnings summary ===============================
+tests/test_threatlens.py::test_flow_created_on_first_packet
+tests/test_threatlens.py::test_flow_accumulates_packets
+tests/test_threatlens.py::test_flow_accumulates_packets
+tests/test_threatlens.py::test_flow_accumulates_packets
+tests/test_threatlens.py::test_flow_accumulates_packets
+tests/test_threatlens.py::test_flow_accumulates_packets
+tests/test_threatlens.py::test_separate_flows_different_tuples
+tests/test_threatlens.py::test_separate_flows_different_tuples
+  C:\Users\sswai\Documents\threatlens_project\tests\test_threatlens.py:104: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pkt           = ParsedPacket(timestamp=datetime.utcnow())
+
+tests/test_threatlens.py: 89 warnings
+  <string>:8: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+tests/test_threatlens.py::test_classify_normal
+tests/test_threatlens.py::test_classify_tor
+tests/test_threatlens.py::test_classify_dos
+  <string>:4: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+
+tests/test_threatlens.py::test_classify_normal
+tests/test_threatlens.py::test_classify_tor
+tests/test_threatlens.py::test_classify_dos
+  C:\Users\sswai\Documents\threatlens_project\tests\test_threatlens.py:198: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    f.end_time    = datetime.utcnow()
+
+tests/test_threatlens.py::test_parsed_packet_has_blocked_field
+  C:\Users\sswai\Documents\threatlens_project\tests\test_threatlens.py:238: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pkt = ParsedPacket(timestamp=datetime.utcnow())
+
+tests/test_threatlens.py::test_flow_tracker_returns_none_for_empty_src
+  C:\Users\sswai\Documents\threatlens_project\tests\test_threatlens.py:253: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pkt = ParsedPacket(timestamp=datetime.utcnow())
+
+tests/test_threatlens.py::test_flow_tracker_returns_none_for_empty_protocol
+  C:\Users\sswai\Documents\threatlens_project\tests\test_threatlens.py:264: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pkt = ParsedPacket(timestamp=datetime.utcnow())
+
+tests/test_threatlens.py::test_engine_stats_structure
+tests/test_threatlens.py::test_security_score_range
+tests/test_threatlens.py::test_engine_rule_blocking
+  C:\Users\sswai\Documents\threatlens_project\threatlens\engine\dpi_engine.py:50: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    self.start_time     = datetime.utcnow()
+
+tests/test_threatlens.py::test_engine_stats_structure
+  C:\Users\sswai\Documents\threatlens_project\threatlens\engine\dpi_engine.py:256: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    uptime = (datetime.utcnow() - self.start_time).total_seconds()
+
+tests/test_threatlens.py::test_engine_rule_blocking
+  C:\Users\sswai\Documents\threatlens_project\tests\test_threatlens.py:310: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    pkt = ParsedPacket(timestamp=datetime.utcnow())
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+====================== 24 passed, 111 warnings in 0.08s =======================
