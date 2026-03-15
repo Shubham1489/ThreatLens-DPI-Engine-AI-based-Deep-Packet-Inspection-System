@@ -422,9 +422,4 @@ ThreatLens is for **defensive** network monitoring of networks you own or are au
 
 **Original C++ DPI Engine:** Devansh Patel – [@devansh934](https://github.com/devansh934)
 
-**ThreatLens Platform:** Built with FastAPI, Scapy, XGBoost, scikit-learn, and an Upzet-inspired dashboard.
-=======
-# ThreatLens-DPI-Engine-AI-based-Deep-Packet-Inspection-System
-Full-stack Python network security platform with Deep Packet Inspection (DPI), XGBoost ML classification, real-time web dashboard, firewall rule management, adware blocking, and PDF/CSV reporting.
-
 <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0f2027,100:2c5364&height=120&section=footer"/>
